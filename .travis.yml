@@ -1,0 +1,18 @@
+sudo: required
+services:
+  - docker
+language: scala
+scala:
+    - 2.12.4
+jdk:
+    - openjdk8
+env:
+  global:
+      - HTTP_ENDPOINT=http://localhost:9000
+install:
+    - npm install -g dredd@stable
+script:
+    - sbt ++$TRAVIS_SCALA_VERSION docker:publishLocal
+    - docker run -d -p 9000:9000 polls:1.0
+    - until curl -I ${HTTP_ENDPOINT} > /dev/null 2>&1; do :; done
+    - dredd ./api-description.apib ${HTTP_ENDPOINT}
